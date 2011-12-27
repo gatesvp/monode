@@ -58,7 +58,7 @@ endConnection = function(connID) {
 
 dataWritten = function() {
   var currentTime = new Date();
-  console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : data written");
+  //console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : data written");
 }
 
 var connection_id = 0; // global connection_id
@@ -79,6 +79,7 @@ socketHandler = function(socket) {
   
 };
 
+// Configure the actual server and run it.
 var server = net.createServer({allowHalfOpen:true});
 server.on('connection', socketHandler);
 server.on('listening', function() { console.log("now listening %s:%s", server.address().address, server.address().port); } );

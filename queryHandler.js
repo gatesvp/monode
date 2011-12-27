@@ -22,7 +22,7 @@ exports.queryHandler = function(socket, header, data){
 
   // Log these
   console.log("  Query: Flags: %s - NS: %s - Skip: %s - Limit %s", flags, fullCollectionName, numberToSkip, numberToLimit);
-  console.log("  Message: %s", message_data);
+  console.log("  Message: %s", JSON.stringify(message_data));
 
   // Handle individual responses here, should result in a BSON resopnse
   if(message_data["_isSelf"] == 1){
@@ -35,6 +35,10 @@ exports.queryHandler = function(socket, header, data){
   }
   else if(message_data["ismaster"] == 1){
     var obj = { "ismaster" : true, "maxBsonObjectSize" : 16777216, "ok" : 1 }
+    response_bson = bson.serialize([obj]);
+  }
+  else if(message_data["getlasterror"] == 1){
+    var obj = { "ok" : 1, "err" : null }
     response_bson = bson.serialize([obj]);
   }
 

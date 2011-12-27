@@ -9,6 +9,16 @@ var _id = new objectid();
 var file_name = util.format('data/%s.json', _id.toHexString());
 var binary_data = bson.serialize(data);
 
+fs.lstat('blah', function(err, stats){
+  if(err){
+    console.log(err);
+  }
+  else {
+    console.log(JSON.stringify(stats));
+  }
+});
+
+/*
 fs.writeFile(file_name, binary_data, 'UTF-8', function(err){
   if(err) { throw err; }
   else {
