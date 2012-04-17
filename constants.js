@@ -16,4 +16,6 @@ constants.OPTS_NO_CURSOR_TIMEOUT = 16;
 constants.OPTS_AWAIT_DATA = 32;
 constants.OPTS_EXHAUST = 64;
 
+constants.DEFAULT_PORT = 27017;
+
 exports.constants = constants;

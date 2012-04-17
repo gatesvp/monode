@@ -13,8 +13,8 @@ exports.insertHandler = function(socket, header, data){
 
   // Next is a null-terminated collection name
   var fullCollectionName = "";
-  for(i = 3; i++; i < data.length) {
-    if(data[i] == 0) { break; }
+  for(var i = 3; i++; i < data.length) {
+    if(data[i] === 0) { break; }
     fullCollectionName += String.fromCharCode(data[i]);
   }
   i++; // skip the null;
@@ -65,7 +65,7 @@ exports.insertHandler = function(socket, header, data){
 
 }
 
-_writeData = function(collectionPath, message_data){
+var _writeData = function(collectionPath, message_data){
 
   // Ensure that an ID is defined (or create one)
   if(!message_data._id) { message_data._id = new objectid(); }
@@ -76,20 +76,25 @@ _writeData = function(collectionPath, message_data){
   fs.writeFile(file_name, binary_data, 'UTF-8', function(err){
     if(err) { throw err; }
     else {
-      return true
+      return true;
     }
   });
-}
+};
 
-mkdirP = function (p, mode, f) {
+var mkdirP = function (p, mode, f) {
     var cb = f || function () {};
-    if (p.charAt(0) != '/') { cb('Relative path: ' + p); return }
+    if (p.charAt(0) !== '/') { 
+        cb('Relative path: ' + p); 
+        return; 
+    }
     
     var ps = path.normalize(p).split('/');
     path.exists(p, function (exists) {
         if (exists) cb(null);
         else mkdirP(ps.slice(0,-1).join('/'), mode, function (err) {
-            if (err && err.errno != process.EEXIST) cb(err)
+            if (err && err.errno != process.EEXIST) {
+                cb(err);
+            }
             else {
               console.log("Created folder %s", p);
               fs.mkdir(p, mode, cb);

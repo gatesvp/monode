@@ -17,17 +17,15 @@ Buffer.prototype.writeInt64LE = function(value, offset){
   this[offset+7] = (value >> 56) & 0xff;
 }
 
-var connection_id = 0;
-
-dataHandler = function(socket, data){
+var dataHandler = function(socket, data){
 
   console.log("Data received: " + data.length);
 
   var header = { messageLength:0, requestID:0, responseTo:0, opCode:0 };
 
   header.messageLength = data.readInt32LE(0, false);
-  header.requestID = data.readInt32LE(4, false);;
-  header.responseTo = data.readInt32LE(8, false);;
+  header.requestID = data.readInt32LE(4, false);
+  header.responseTo = data.readInt32LE(8, false);
   header.opCode = data.readInt32LE(12, false);
 
   console.log("Header: " + JSON.stringify(header));
@@ -46,23 +44,23 @@ dataHandler = function(socket, data){
 
 };
 
-closeConnection = function(connID) {
+var closeConnection = function(connID) {
   var currentTime = new Date();
   console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : closed connection " + connID );
-}
+};
 
-endConnection = function(connID) {
+var endConnection = function(connID) {
   var currentTime = new Date();
   console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : client ended connection " + connID );
-}
+};
 
-dataWritten = function() {
+var dataWritten = function() {
   var currentTime = new Date();
   //console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : data written");
 }
 
 var connection_id = 0; // global connection_id
-socketHandler = function(socket) {
+var socketHandler = function(socket) {
 
   var my_connection_id = connection_id++;
 
@@ -83,7 +81,7 @@ socketHandler = function(socket) {
 var server = net.createServer({allowHalfOpen:true});
 server.on('connection', socketHandler);
 server.on('listening', function() { console.log("now listening %s:%s", server.address().address, server.address().port); } );
-server.listen(27017);
+server.listen(constants.DEFAULT_PORT);
 
 
 
