@@ -5,7 +5,7 @@ var constants = require('./constants').constants;
 var objectid = require('./bson/objectid').ObjectID;
 var path = require('path');
 
-exports.insertHandler = function(socket, header, data){
+exports.handler = function(socket, header, data){
 
   // First four bytes of query are the flags
   // TODO ContinueOnError (0) flag.
