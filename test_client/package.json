@@ -1,0 +1,9 @@
+{
+  "name": "monode-test-lib",
+  "dependencies" : {
+    "mongodb" : "*"
+  },
+  "engine": {
+    "node": ">=0.8"
+  }
+}

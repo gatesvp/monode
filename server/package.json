@@ -1,0 +1,35 @@
+{
+  "name": "Monode",
+  "description": "A node.js implementation of MongoDB",
+  "keywords": [
+    "mongodb",
+    "mongo",
+    "db",
+	"monode"
+  ],
+  "version": "0.0.1",
+  "author": {
+    "name": "Gaetan Voyer-Perrault",
+    "email": "gatesvp@gmail.com"
+  },
+  "dependencies": {
+    "mkdirp": "0.3.3"
+  },
+  "devDependencies": {
+  
+  },
+  "config": {
+    "native": false
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "licenses": [
+    {
+      "type": "Apache License, Version 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
+  "_id": "monode@0.0.1",
+  "_from": "monode"
+}
