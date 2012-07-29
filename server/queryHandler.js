@@ -40,8 +40,14 @@ exports.handle = function(socket, header, data, socketWriterCallback){
     response_bson = bson.serialize([obj]);
   }
   else if(message_data.getlasterror === 1){
-    var obj = { "ok" : 1, "err" : null }
-    response_bson = bson.serialize([obj]);
+	if(socket.lastErrors[header.requestID]){
+	  console.log("GETLASTERROR %s", socket.lastErrors[header.requestID]);
+      response_bson = bson.serialize(socket.lastErrors[header.requestID]);
+	}
+	else {
+	  var obj = { "ok" : 1, "err" : null, "n" : 0 };
+	  response_bson = bson.serialize(obj);
+	}
   }
 
   // Create an op header containing a reply header

@@ -32,8 +32,8 @@ mongodb.connect(mongourl, function(err, conn){
 	/* Insert the object then print in response */
     /* Note the _id has been created */
     coll.insert( object_to_insert, {safe:true}, function(err){
-      if(err) { console.log(err.stack); }
-      else { console.log("Got There"); }
+      if(err) { console.log(err.stack); process.exit(); }
+      else { console.log("Got There"); process.exit(); }
     });
   });
 });

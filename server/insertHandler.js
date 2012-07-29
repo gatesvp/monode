@@ -38,28 +38,18 @@ exports.handle = function(socket, header, data, socketWriterCallback){
   mkdirp(collectionPath, 0777, function(err) {
 	if(err) { console.log("Failed to create path" + collectionPath); }
 	else {
-	  console.log("full path created");
-      _writeData(collectionPath, message_data);
+	  console.log("path "+collectionPath+" exists");
+      _writeData(socket, header, collectionPath, message_data); // note that the write is async
 
       // Create an op header containing a reply header
       // These are intermediary objects and may be removed later
-      var replyHeader = { requestID: header.requestID, responseTo: header.requestID, opCode: 1 };
+      var replyHeader = { requestID: header.requestID, responseTo: header.requestID, opCode: constants.OP_REPLY };
       var opHeader = { header: replyHeader , responseFlags:4, cursorID:0, startingFrom:0, numberReturned:1 };
 
       // Figure out the buffer size and then instantiate it.
       replyHeader.messageLength = (16 + 20); // reply header + op header + serialized documents
 
-      var serialized_response = new Buffer(replyHeader.messageLength);
-
-      // Populate response buffer with header data
-      serialized_response.writeInt32LE(replyHeader.messageLength,0);
-      serialized_response.writeInt32LE(replyHeader.requestID, 4);
-      serialized_response.writeInt32LE(replyHeader.responseTo, 8);
-      serialized_response.writeInt32LE(replyHeader.opCode, 12);
-      serialized_response.writeInt32LE(opHeader.responseFlags, 16);
-      serialized_response.writeInt64LE(opHeader.cursorID, 20);
-      serialized_response.writeInt32LE(opHeader.startingFrom, 28);
-      serialized_response.writeInt32LE(opHeader.numberReturned, 32);
+      var serialized_response = _generateResponseDataFromHeader(opHeader);
 
       console.log("Response length %s", serialized_response.length);
 
@@ -68,7 +58,23 @@ exports.handle = function(socket, header, data, socketWriterCallback){
   });
 }
 
-var _writeData = function(collectionPath, message_data){
+var _generateResponseDataFromHeader = function(opHeader) {
+  var serialized_response = new Buffer(opHeader.header.messageLength);
+
+  // Populate response buffer with header data
+  serialized_response.writeInt32LE(opHeader.header.messageLength,0);
+  serialized_response.writeInt32LE(opHeader.header.requestID, 4);
+  serialized_response.writeInt32LE(opHeader.header.responseTo, 8);
+  serialized_response.writeInt32LE(opHeader.header.opCode, 12);
+  serialized_response.writeInt32LE(opHeader.responseFlags, 16);
+  serialized_response.writeInt64LE(opHeader.cursorID, 20);
+  serialized_response.writeInt32LE(opHeader.startingFrom, 28);
+  serialized_response.writeInt32LE(opHeader.numberReturned, 32);
+  
+  return serialized_response;
+};
+
+var _writeData = function(socket, header, collectionPath, message_data){
 
   // Ensure that an ID is defined (or create one)
   if(!message_data._id) { message_data._id = new objectid(); }
@@ -77,8 +83,16 @@ var _writeData = function(collectionPath, message_data){
   var binary_data = bson.serialize(message_data);
 
   fs.writeFile(file_name, binary_data, 'UTF-8', function(err){
-    if(err) { throw err; }
+    var lastError = { n: 1, ok: true, err: null };
+    if(err) {
+      lastError.n = 0;
+      lastError.ok = false;
+      lastError.err = err;  
+	  socket.lastErrors[header.requestID] = lastError;
+	  return false;
+	}
     else {
+	  socket.lastErrors[header.requestID] = lastError;
       return true;
     }
   });

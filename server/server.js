@@ -23,6 +23,25 @@ Buffer.prototype.writeInt64LE = function(value, offset){
   this[offset+7] = (value >> 56) & 0xff;
 }
 
+var connection_id = 0; // global connection_id
+
+var socketHandler = function(socket) {
+
+  var my_connection_id = connection_id++;
+  socket.lastErrors = { }; // instantiate a holder for the "getLastError" on this socket
+  
+  socket.setTimeout(30*1000);
+
+  socket.on('close', function() { socket.closed = true; closeConnection(my_connection_id); });
+  socket.on('end', function() { socket.closed = true; endConnection(my_connection_id); });
+  socket.on('data', function(data) { 
+    dataHandler(socket, data, socketWriter); 
+  });
+  socket.on('timeout', function() { socket.destroy(); });
+  socket.on('error', function(err) { console.log("Error on connection " + my_connection_id + ": " + err); })
+
+  console.log("connection %s accepted: %s:%s", my_connection_id, socket.remoteAddress, socket.remotePort);
+  
 /**
  * Core router for the incoming data
  * */
@@ -49,53 +68,53 @@ var dataHandler = function(socket, data, socketWriterCallback){
     serverStats.inserts++;
     insertHandler.handle(socket, header, data.slice(16), socketWriterCallback);
   } 
+  else if(header.opCode == constants.OP_MSG){
+	console.log(data.slice(16));
+    commandHandler.handle(socket, header, data.slice(16), sockeetWriterCallback);
+  }
   //console.log(bson.deserialize(response));
   //socketWriterCallback(response);
 
 };
 
-/**
- * Handler for a connection closed by the server
- **/
-var closeConnection = function(connID) {
-  var currentTime = new Date();
-  console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : closed connection " + connID );
-};
+  /**
+   * Handler for a connection closed by the server
+   **/
+  var closeConnection = function(connID) {
+    var currentTime = new Date();
+    console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : closed connection " + connID );
+  };
 
-/**
- * Handler for a connection closed by the user
- **/
-var endConnection = function(connID) {
-  var currentTime = new Date();
-  console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : client ended connection " + connID );
-};
+  /**
+   * Handler for a connection closed by the user
+   **/
+  var endConnection = function(connID) {
+    var currentTime = new Date();
+    console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : client ended connection " + connID );
+  };
 
-/**
- * Handler for a response written ack to the socket
- **/
-var dataWritten = function() {
-  var currentTime = new Date();
-  //console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : data written");
-}
+  /**
+   * Handler for writing the response
+   **/
+  var socketWriter = function(response) { 
+    if(!socket.closed){
+      socket.write(response, 'utf8', dataWritten);
+	}
+  }
 
-var connection_id = 0; // global connection_id
-var socketHandler = function(socket) {
-
-  var my_connection_id = connection_id++;
-
-  socket.setTimeout(30*1000);
-
-  socket.on('close', function() { closeConnection(my_connection_id); });
-  socket.on('end', function() { endConnection(my_connection_id); });
-  socket.on('data', function(data) { 
-    dataHandler(socket, data, function(response) { socket.write(response, 'utf8', dataWritten); } ); 
-  });
-  socket.on('timeout', function() { socket.destroy(); });
-
-  console.log("connection %s accepted: %s:%s", my_connection_id, socket.remoteAddress, socket.remotePort);
+  /**
+   * Handler for a response written back to the socket
+   **/
+  var dataWritten = function() {
+    var currentTime = new Date();
+    //console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : data written");
+  }
   
 };
 
+/**
+ * Handler for when the socket is ready for listening
+ **/
 var listeningHandler = function() { 
   console.log("now listening %s:%s", server.address().address, server.address().port); 
 } 
