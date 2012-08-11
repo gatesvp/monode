@@ -29,6 +29,7 @@ var socketHandler = function(socket) {
 
   var my_connection_id = connection_id++;
   socket.lastErrors = { }; // instantiate a holder for the "getLastError" on this socket
+  socket.lastActivity = new Date();
   
   socket.setTimeout(30*1000);
 
@@ -42,40 +43,40 @@ var socketHandler = function(socket) {
 
   console.log("connection %s accepted: %s:%s", my_connection_id, socket.remoteAddress, socket.remotePort);
   
-/**
- * Core router for the incoming data
- * */
-var dataHandler = function(socket, data, socketWriterCallback){
+  /**
+   * Core router for the incoming data from the socket
+   **/
+  var dataHandler = function(socket, data, socketWriterCallback){
 
-  console.log("Data received: " + data.length);
+    console.log("Data received: " + data.length);
 
-  var header = { messageLength:0, requestID:0, responseTo:0, opCode:0 };
+    var header = { messageLength:0, requestID:0, responseTo:0, opCode:0 };
 
-  header.messageLength = data.readInt32LE(0, false);
-  header.requestID = data.readInt32LE(4, false);
-  header.responseTo = data.readInt32LE(8, false);
-  header.opCode = data.readInt32LE(12, false);
+    header.messageLength = data.readInt32LE(0, false);
+    header.requestID = data.readInt32LE(4, false);
+    header.responseTo = data.readInt32LE(8, false);
+    header.opCode = data.readInt32LE(12, false);
 
-  console.log("Header: " + JSON.stringify(header));
+    console.log("Header: " + JSON.stringify(header));
 
-  var response = "";
+    var response = "";
 
-  if(header.opCode == constants.OP_QUERY){
-    serverStats.queries++;
-    queryHandler.handle(socket, header, data.slice(16), socketWriterCallback);
-  }
-  else if(header.opCode == constants.OP_INSERT){
-    serverStats.inserts++;
-    insertHandler.handle(socket, header, data.slice(16), socketWriterCallback);
-  } 
-  else if(header.opCode == constants.OP_MSG){
-	console.log(data.slice(16));
-    commandHandler.handle(socket, header, data.slice(16), sockeetWriterCallback);
-  }
-  //console.log(bson.deserialize(response));
-  //socketWriterCallback(response);
+    if(header.opCode == constants.OP_QUERY){
+      serverStats.queries++;
+      queryHandler.handle(socket, header, data.slice(16), socketWriterCallback);
+    }
+    else if(header.opCode == constants.OP_INSERT){
+      serverStats.inserts++;
+      insertHandler.handle(socket, header, data.slice(16), socketWriterCallback);
+    }
+    else if(header.opCode == constants.OP_MSG){
+    console.log(data.slice(16));
+      commandHandler.handle(socket, header, data.slice(16), sockeetWriterCallback);
+    }
+    //console.log(bson.deserialize(response));
+    //socketWriterCallback(response);
 
-};
+  };
 
   /**
    * Handler for a connection closed by the server
@@ -99,7 +100,7 @@ var dataHandler = function(socket, data, socketWriterCallback){
   var socketWriter = function(response) { 
     if(!socket.closed){
       socket.write(response, 'utf8', dataWritten);
-	}
+	  }
   }
 
   /**
@@ -107,9 +108,8 @@ var dataHandler = function(socket, data, socketWriterCallback){
    **/
   var dataWritten = function() {
     var currentTime = new Date();
-    //console.log(currentTime.getHours()+":"+currentTime.getMinutes()+":"+currentTime.getSeconds()+" : data written");
+    socket.lastActivity = currentTime;
   }
-  
 };
 
 /**
