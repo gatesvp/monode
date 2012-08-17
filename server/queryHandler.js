@@ -48,13 +48,17 @@ exports.handle = function(socket, header, data, socketWriterCallback){
     if(socket.lastErrors[header.requestID]){
       console.log("GETLASTERROR %s", socket.lastErrors[header.requestID]);
       responseBson = bson.serialize(socket.lastErrors[header.requestID]);
-      delete socket.lastErrors[header.requestID];
     }
     else {
-      var obj = { "ok" : 1, "err" : null, "n" : 0 };
-      responseBson = bson.serialize(obj);
+      // The last error has not been updated, let's listen for an update.
+      socket.once("lastErrorUpdated", function(data){
+        var responseBson = bson.serialize(data);
+        socketWriterCallback(serverUtilities.GenerateResponseForHeaderAndBson(opHeader, responseBson));
+      });
     }
   }
 
-  socketWriterCallback(serverUtilities.GenerateResponseForHeaderAndBson(opHeader, responseBson));
+  if(responseBson) {
+    socketWriterCallback(serverUtilities.GenerateResponseForHeaderAndBson(opHeader, responseBson));
+  }
 }

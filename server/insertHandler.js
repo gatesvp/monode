@@ -41,7 +41,8 @@ exports.handle = function(socket, header, data, socketWriterCallback){
     else {
       console.log("path "+collectionPath+" exists");
 
-      _writeData(socket, header, collectionPath, message_data); // note that the write is async
+      // note that the write is async
+      _writeData(socket, header, collectionPath, message_data);
 
       // Create an op header containing a reply header
       // These are intermediary objects and may be removed later
@@ -64,17 +65,15 @@ var _writeData = function(socket, header, collectionPath, message_data){
   var binary_data = bson.serialize(message_data);
 
   fs.writeFile(file_name, binary_data, 'UTF-8', function(err){
-    var lastError = { n: 1, ok: true, err: null };
+    var lastError = { n: 1, ok: false, err: null };
+    
     if(err) {
-      lastError.n = 0;
-      lastError.ok = false;
-      lastError.err = err;  
-	    socket.lastErrors[header.requestID] = lastError;
-	    return false;
+      lastError = { n: 0, ok: false, err: err };
 	  }
-    else {
-	    socket.lastErrors[header.requestID] = lastError;
-      return true;
-    }
+
+    // Write the last error on the socket and then emit an update
+    socket.lastErrors[header.requestID] = lastError;
+    socket.emit("lastErrorUpdated", lastError);
+
   });
 };

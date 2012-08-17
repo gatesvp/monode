@@ -29,10 +29,10 @@ mongodb.connect(mongourl, function(err, conn){
     /* Simple object to insert: ip address and date */
     object_to_insert = { 'ip': '12345', 'ts': new Date() };
     
-	/* Insert the object then print in response */
+	  /* Insert the object then print in response */
     /* Note the _id has been created */
     coll.insert( object_to_insert, {safe:true}, function(err){
-      if(err) { console.log(err.stack); process.exit(); }
+      if(err) { console.log(err); process.exit(); }
       else { console.log("Got There"); process.exit(); }
     });
   });
